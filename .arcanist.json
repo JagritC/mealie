@@ -4,7 +4,11 @@
     "runner": "docker",
     "entry": {
       "type": "compose",
-      "files": ["docker/docker-compose.yml"],
+      "files": [
+        "docker/docker-compose.yml",
+        "docker/docker-compose.dev.yml",
+        "docker/docker-compose.arcanist.yml"
+      ],
       "service": "mealie"
     },
     "url": {
