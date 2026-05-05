@@ -1,4 +1,5 @@
 import axios from "axios";
+import { translateMessage } from "~/composables/use-translated-message";
 import { alert } from "~/composables/use-toast";
 
 declare module "axios" {
@@ -7,7 +8,8 @@ declare module "axios" {
   }
 }
 
-export default defineNuxtPlugin(() => {
+export default defineNuxtPlugin((nuxtApp) => {
+  const i18n = nuxtApp.$i18n;
   const tokenName = useRuntimeConfig().public.AUTH_TOKEN;
   const axiosInstance = axios.create({
     // timeout removed to allow backend to handle timeouts
@@ -31,12 +33,12 @@ export default defineNuxtPlugin(() => {
   // Add response interceptor
   axiosInstance.interceptors.response.use(
     (response) => {
-      if (response?.data?.message && !response.config?.suppressAlert) alert.info(response.data.message as string);
+      if (response?.data?.message && !response.config?.suppressAlert) alert.info(translateMessage(response.data.message as string, i18n));
       return response;
     },
     (error) => {
       if (error?.response?.data?.detail?.message) {
-        alert.error(error.response.data.detail.message as string);
+        alert.error(translateMessage(error.response.data.detail.message as string, i18n));
       };
 
       // If we receive a 401 Unauthorized response, clear the token cookie and redirect to login

@@ -26,7 +26,7 @@
             </v-chip>
           </v-col>
           <v-col v-else cols="9" style="margin: auto; text-align: center">
-            {{ event.subject }}
+            {{ subject }}
           </v-col>
           <v-col :cols="useMobileFormat ? 'auto' : '1'" class="px-0 pt-0">
             <RecipeTimelineContextMenu
@@ -68,7 +68,7 @@
       <v-card-text class="background">
         <v-row>
           <v-col>
-            <strong v-if="useMobileFormat">{{ event.subject }}</strong>
+            <strong v-if="useMobileFormat">{{ subject }}</strong>
             <v-img
               v-if="eventImageUrl"
               :src="eventImageUrl"
@@ -94,6 +94,7 @@ import RecipeCardMobile from "./RecipeCardMobile.vue";
 import RecipeTimelineContextMenu from "./RecipeTimelineContextMenu.vue";
 import { useStaticRoutes } from "~/composables/api";
 import { useTimelineEventTypes } from "~/composables/recipes/use-recipe-timeline-events";
+import { translateMessage } from "~/composables/use-translated-message";
 import type { Recipe, RecipeTimelineEventOut, RecipeTimelineEventUpdate } from "~/lib/api/types/recipe";
 import UserAvatar from "~/components/Domain/User/UserAvatar.vue";
 import SafeMarkdown from "~/components/global/SafeMarkdown.vue";
@@ -117,6 +118,7 @@ defineEmits<{
 
 const { $globals } = useNuxtApp();
 const display = useDisplay();
+const i18n = useI18n();
 const { recipeTimelineEventSmallImage } = useStaticRoutes();
 const { eventTypeOptions } = useTimelineEventTypes();
 
@@ -127,6 +129,14 @@ const groupSlug = computed(() => (route.params.groupSlug as string) || currentUs
 
 const useMobileFormat = computed(() => {
   return display.smAndDown.value;
+});
+
+const subject = computed(() => {
+  if (props.event.eventType !== "system") {
+    return props.event.subject;
+  }
+
+  return translateMessage(props.event.subject, i18n);
 });
 
 const attrs = computed(() => {
