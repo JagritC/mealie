@@ -1,5 +1,7 @@
 import axios from "axios";
+import type { Composer } from "vue-i18n";
 import { alert } from "~/composables/use-toast";
+import { translateApiMessage } from "~/utils/api-messages";
 
 declare module "axios" {
   interface AxiosRequestConfig {
@@ -7,8 +9,9 @@ declare module "axios" {
   }
 }
 
-export default defineNuxtPlugin(() => {
+export default defineNuxtPlugin((nuxtApp) => {
   const tokenName = useRuntimeConfig().public.AUTH_TOKEN;
+  const i18n = nuxtApp.$i18n as Composer;
   const axiosInstance = axios.create({
     // timeout removed to allow backend to handle timeouts
     baseURL: "/", // api calls already pass with /api
@@ -31,7 +34,9 @@ export default defineNuxtPlugin(() => {
   // Add response interceptor
   axiosInstance.interceptors.response.use(
     (response) => {
-      if (response?.data?.message && !response.config?.suppressAlert) alert.info(response.data.message as string);
+      if (response?.data?.message && !response.config?.suppressAlert) {
+        alert.info(translateApiMessage(response.data.message as string, i18n));
+      }
       return response;
     },
     (error) => {

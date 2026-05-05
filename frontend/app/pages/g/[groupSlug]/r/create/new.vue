@@ -44,6 +44,7 @@
 <script setup lang="ts">
 import type { AxiosResponse } from "axios";
 import { useUserApi } from "~/composables/api";
+import { alert } from "~/composables/use-toast";
 import { validators } from "~/composables/use-validators";
 import type { VForm } from "~/types/auto-forms";
 
@@ -56,6 +57,7 @@ const route = useRoute();
 const groupSlug = computed(() => route.params.groupSlug as string || auth.user.value?.groupSlug || "");
 
 const api = useUserApi();
+const i18n = useI18n();
 const router = useRouter();
 
 function handleResponse(response: AxiosResponse<string> | null, edit = false) {
@@ -64,7 +66,9 @@ function handleResponse(response: AxiosResponse<string> | null, edit = false) {
     state.loading = false;
     return;
   }
-  router.push(`/g/${groupSlug.value}/r/${response.data}?edit=${edit.toString()}`);
+  router.push(`/g/${groupSlug.value}/r/${response.data}?edit=${edit.toString()}`).then(() => {
+    alert.success(i18n.t("recipe.recipe-created"));
+  });
 }
 
 const newRecipeName = ref("");
