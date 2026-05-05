@@ -1,0 +1,29 @@
+{
+  "appRuntime": {
+    "kind": "web",
+    "runner": "docker",
+    "entry": {
+      "type": "compose",
+      "files": ["docker/docker-compose.yml"],
+      "service": "mealie"
+    },
+    "url": {
+      "hostPort": 9091,
+      "path": "/"
+    },
+    "ready": {
+      "path": "/api/app/about",
+      "timeoutSeconds": 360
+    },
+    "open": {
+      "path": "/"
+    },
+    "e2e": {
+      "testCommand": "cd tests/e2e && yarn install --frozen-lockfile && PLAYWRIGHT_BASE_URL=http://localhost:9091 npx playwright test",
+      "credentials": [
+        { "name": "mealie_admin_email", "envVar": "MEALIE_ADMIN_EMAIL" },
+        { "name": "mealie_admin_password", "envVar": "MEALIE_ADMIN_PASSWORD" }
+      ]
+    }
+  }
+}
