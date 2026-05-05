@@ -1,3 +1,5 @@
+from datetime import UTC, datetime, timedelta
+
 from fastapi.testclient import TestClient
 
 from mealie.core.config import get_app_settings
@@ -136,5 +138,23 @@ def test_self_promote_admin(api_client: TestClient, unique_user: TestUser):
 
 
 def test_delete_user(api_client: TestClient, admin_token, unique_user: TestUser):
+    mealplan_ids: list[int] = []
+    for offset in range(2):
+        response = api_client.post(
+            api_routes.households_mealplans,
+            json={
+                "date": (datetime.now(UTC).date() + timedelta(days=offset)).isoformat(),
+                "entryType": "breakfast",
+                "title": random_string(),
+                "text": random_string(),
+            },
+            headers=unique_user.token,
+        )
+        assert response.status_code == 201
+        mealplan_ids.append(response.json()["id"])
+
     response = api_client.delete(api_routes.admin_users_item_id(unique_user.user_id), headers=admin_token)
     assert response.status_code == 200
+
+    for mealplan_id in mealplan_ids:
+        assert unique_user.repos.meals.get_one(mealplan_id) is None
