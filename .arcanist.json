@@ -15,19 +15,75 @@
       "hostPort": 9091,
       "path": "/"
     },
+    "portMapping": {
+      "containerPort": 9000
+    },
     "ready": {
-      "path": "/api/app/about",
+      "path": "/api/app/about/startup-info",
       "timeoutSeconds": 360
     },
     "open": {
-      "path": "/"
+      "path": "/login"
     },
-    "e2e": {
-      "testCommand": "cd tests/e2e && yarn install --frozen-lockfile && PLAYWRIGHT_BASE_URL=http://localhost:9091 npx playwright test",
-      "credentials": [
-        { "name": "mealie_admin_email", "envVar": "MEALIE_ADMIN_EMAIL" },
-        { "name": "mealie_admin_password", "envVar": "MEALIE_ADMIN_PASSWORD" }
-      ]
+    "auth": {
+      "command": "python3 .arcanist/auth/write_default_user_storage_state.py",
+      "validatePath": "/admin/setup"
     }
+  },
+  "verify": {
+    "test": {
+      "command": "bash .arcanist/verify/arcanist-self-test.sh",
+      "rules": [
+        {
+          "name": "arcanist-onboarding",
+          "paths": [
+            ".arcanist.json",
+            ".arcanist/**",
+            "ARCANIST.md"
+          ],
+          "command": "bash .arcanist/verify/arcanist-self-test.sh"
+        },
+        {
+          "name": "docker-runtime",
+          "paths": [
+            "docker/**"
+          ],
+          "command": "docker compose -f docker/docker-compose.yml -f docker/docker-compose.dev.yml -f docker/docker-compose.arcanist.yml config >/dev/null"
+        },
+        {
+          "name": "backend",
+          "paths": [
+            "mealie/**",
+            "tests/fixtures/**",
+            "tests/integration_tests/**",
+            "tests/multitenant_tests/**",
+            "tests/unit_tests/**",
+            "dev/**",
+            "pyproject.toml",
+            "uv.lock",
+            ".pre-commit-config.yaml"
+          ],
+          "command": "uv run ruff format . --check && uv run ruff check mealie && uv run mypy mealie && DB_ENGINE=sqlite uv run pytest tests/unit_tests tests/integration_tests/admin_tests/test_admin_about.py tests/integration_tests/user_tests/test_user_login.py"
+        },
+        {
+          "name": "frontend",
+          "paths": [
+            "frontend/**"
+          ],
+          "command": "cd frontend && yarn nuxt prepare && yarn lint --max-warnings=0 && yarn test:ci"
+        },
+        {
+          "name": "e2e-runtime",
+          "paths": [
+            "tests/e2e/**"
+          ],
+          "command": "/app/scripts/arcanist-app start && /app/scripts/arcanist-app run bash .arcanist/verify/runtime-login.sh"
+        }
+      ],
+      "timeoutSeconds": 7200
+    }
+  },
+  "pr": {
+    "templatePath": ".github/pull_request_template.md"
   }
 }
